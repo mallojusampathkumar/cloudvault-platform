@@ -1,0 +1,138 @@
+# CloudVault local development stack
+# Run: docker compose up -d
+# Stop: docker compose down
+# Logs: docker compose logs -f <service-name>
+
+services:
+  # ============================================
+  # Data layer
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: cv-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cloudvault
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: cv-postgres
+    environment:
+      POSTGRES_USER: cloudvault
+      POSTGRES_PASSWORD: cloudvault_dev_pw
+      POSTGRES_DB: cloudvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - cloudvault
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudvault"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: cv-rabbitmq
+    ports:
+      - "5672:5672"     # AMQP protocol
+      - "15672:15672"   # Management UI
+    networks:
+      - cloudvault
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================
+  # Application services
+  # ============================================
+  user-service:
+    image: cloudvault/user-service:0.2.0
+    container_name: cv-user-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      JWT_SECRET: dev-secret-change-in-prod
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+  product-service:
+    image: cloudvault/product-service:0.1.0
+    container_name: cv-product-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+  cart-service:
+    image: cloudvault/cart-service:0.1.0
+    container_name: cv-cart-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+  order-service:
+    image: cloudvault/order-service:0.1.0
+    container_name: cv-order-service
+    ports:
+      - "3004:3004"
+    environment:
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      CART_SERVICE_URL: http://cart-service:3003
+    depends_on:
+      - product-service
+      - cart-service
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+  payment-service:
+    image: cloudvault/payment-service:0.1.0
+    container_name: cv-payment-service
+    ports:
+      - "3005:3005"
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+  notification-service:
+    image: cloudvault/notification-service:0.1.0
+    container_name: cv-notification-service
+    ports:
+      - "3006:3006"
+    networks:
+      - cloudvault
+    restart: unless-stopped
+
+networks:
+  cloudvault:
+    driver: bridge
+
+volumes:
+  postgres-data:

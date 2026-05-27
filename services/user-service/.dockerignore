@@ -1,0 +1,38 @@
+# Dependencies (will be reinstalled in container)
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Environment files (NEVER bake secrets into images)
+.env
+.env.*
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Test files
+tests
+test
+*.test.js
+coverage
+
+# Build artifacts
+dist
+build
+
+# Docs
+README.md
+*.md

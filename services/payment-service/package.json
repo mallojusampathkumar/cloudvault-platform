@@ -1,0 +1,15 @@
+{
+  "name": "payment-service",
+  "version": "1.0.0",
+  "description": "CloudVault mock payment processor",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "4.21.0",
+    "helmet": "7.1.0",
+    "cors": "2.8.5",
+    "morgan": "1.10.0"
+  }
+}
