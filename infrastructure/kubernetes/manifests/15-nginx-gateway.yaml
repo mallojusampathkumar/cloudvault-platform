@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-gateway-config
+  namespace: cloudvault
+data:
+  default.conf: |
+    # Use Kubernetes DNS for runtime resolution (avoids stale cached IPs)
+    resolver kube-dns.kube-system.svc.cluster.local valid=10s ipv6=off;
+
+    server {
+      listen 80;
+
+      location = /health {
+        return 200 'gateway-healthy';
+        add_header Content-Type text/plain;
+      }
+
+      # Variables in proxy_pass force per-request DNS resolution
+      location /api/users/ {
+        set $upstream http://user-service.cloudvault.svc.cluster.local:3001;
+        rewrite ^/api/users/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/users {
+        set $upstream http://user-service.cloudvault.svc.cluster.local:3001;
+        proxy_pass $upstream/;
+      }
+
+      location /api/products/ {
+        set $upstream http://product-service.cloudvault.svc.cluster.local:3002;
+        rewrite ^/api/products/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/products {
+        set $upstream http://product-service.cloudvault.svc.cluster.local:3002;
+        proxy_pass $upstream/products;
+      }
+
+      location /api/cart/ {
+        set $upstream http://cart-service.cloudvault.svc.cluster.local:3003;
+        rewrite ^/api/cart/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/cart {
+        set $upstream http://cart-service.cloudvault.svc.cluster.local:3003;
+        proxy_pass $upstream/;
+      }
+
+      location /api/orders/ {
+        set $upstream http://order-service.cloudvault.svc.cluster.local:3004;
+        rewrite ^/api/orders/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/orders {
+        set $upstream http://order-service.cloudvault.svc.cluster.local:3004;
+        proxy_pass $upstream/orders;
+      }
+
+      location /api/payments/ {
+        set $upstream http://payment-service.cloudvault.svc.cluster.local:3005;
+        rewrite ^/api/payments/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/payments {
+        set $upstream http://payment-service.cloudvault.svc.cluster.local:3005;
+        proxy_pass $upstream/;
+      }
+
+      location /api/notifications/ {
+        set $upstream http://notification-service.cloudvault.svc.cluster.local:3006;
+        rewrite ^/api/notifications/(.*)$ /$1 break;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+      }
+      location = /api/notifications {
+        set $upstream http://notification-service.cloudvault.svc.cluster.local:3006;
+        proxy_pass $upstream/;
+      }
+    }

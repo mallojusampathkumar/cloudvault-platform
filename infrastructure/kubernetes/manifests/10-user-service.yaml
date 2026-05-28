@@ -1,0 +1,65 @@
+# ============================================
+# user-service Deployment + Service
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: cloudvault
+  labels:
+    app: user-service
+spec:
+  replicas: 2                      # Run 2 pods for HA
+  selector:
+    matchLabels:
+      app: user-service            # This Deployment manages pods with this label
+  template:                        # Pod template
+    metadata:
+      labels:
+        app: user-service          # Pods get this label
+    spec:
+      containers:
+        - name: user-service
+          image: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/user-service:0.1.0
+          ports:
+            - containerPort: 3001
+          env:
+            - name: PORT
+              value: "3001"
+            - name: JWT_SECRET
+              value: "dev-secret-change-in-prod"
+          resources:
+            requests:              # Guaranteed minimum
+              cpu: 50m
+              memory: 64Mi
+            limits:                # Hard ceiling
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:           # K8s restarts pod if this fails
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:          # K8s stops traffic if this fails
+            httpGet:
+              path: /ready
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: cloudvault
+  labels:
+    app: user-service
+spec:
+  type: ClusterIP                  # Internal-only (we add ingress later)
+  selector:
+    app: user-service              # Routes to pods with this label
+  ports:
+    - port: 3001
+      targetPort: 3001
+      protocol: TCP

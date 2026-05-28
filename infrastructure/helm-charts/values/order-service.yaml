@@ -1,0 +1,11 @@
+name: order-service
+port: 3004
+image:
+  repository: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/order-service
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+env:
+  - name: PRODUCT_SERVICE_URL
+    value: "http://product-service:3002"
+  - name: CART_SERVICE_URL
+    value: "http://cart-service:3003"

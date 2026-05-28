@@ -1,0 +1,11 @@
+name: cart-service
+port: 3003
+image:
+  repository: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/cart-service
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+env:
+  - name: PORT
+    value: "3003"
+  - name: REDIS_URL
+    value: "redis://redis:6379"

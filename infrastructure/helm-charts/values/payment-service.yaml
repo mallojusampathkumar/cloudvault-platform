@@ -1,0 +1,6 @@
+name: payment-service
+port: 3005
+image:
+  repository: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/payment-service
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
