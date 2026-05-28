@@ -1,0 +1,53 @@
+name: CI Pipeline
+
+# When does this run?
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Prevent overlapping runs on the same branch (cancel old ones)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================
+  # Job 1: Detect which services changed
+  # (so we only build what changed - efficiency)
+  # ============================================
+  lint-and-validate:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Dockerfiles exist
+        run: |
+          echo "Checking all services have Dockerfiles..."
+          for svc in user-service product-service cart-service order-service payment-service notification-service; do
+            if [ -f "services/$svc/Dockerfile" ]; then
+              echo "✓ $svc has Dockerfile"
+            else
+              echo "✗ $svc MISSING Dockerfile"
+              exit 1
+            fi
+          done
+
+      - name: Validate Helm chart
+        run: |
+          echo "Installing Helm..."
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          echo "Linting Helm chart..."
+          helm lint infrastructure/helm-charts/cloudvault-service \
+            -f infrastructure/helm-charts/values/user-service.yaml
+
+      - name: Validate Kubernetes manifests
+        run: |
+          echo "Checking YAML syntax of manifests..."
+          for f in infrastructure/kubernetes/manifests/*.yaml; do
+            echo "Validating $f"
+            python3 -c "import yaml,sys; list(yaml.safe_load_all(open('$f')))" && echo "✓ valid"
+          done
