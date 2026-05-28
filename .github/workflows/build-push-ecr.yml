@@ -1,0 +1,69 @@
+name: Build, Scan & Push to ECR
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: build-ecr-${{ github.ref }}
+  cancel-in-progress: true
+
+# Permissions for OIDC token
+permissions:
+  contents: read
+  id-token: write   # Required to request JWT for OIDC
+
+jobs:
+  build-push:
+    name: Build & Push ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - user-service
+          - product-service
+          - cart-service
+          - order-service
+          - payment-service
+          - notification-service
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::806121398176:role/github-cloudvault-oidc-role
+          aws-region: ap-south-1
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push to ECR
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/cloudvault/${{ matrix.service }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/cloudvault/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan pushed image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/cloudvault/${{ matrix.service }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+
+      - name: Image pushed
+        run: echo "✓ ${{ matrix.service }}:${{ github.sha }} pushed to ECR"
