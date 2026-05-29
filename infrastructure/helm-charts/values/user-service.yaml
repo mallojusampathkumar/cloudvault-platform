@@ -2,7 +2,7 @@ name: user-service
 port: 3001
 image:
   repository: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/user-service
-  tag: "0.1.0"
+  tag: "latest"
   pullPolicy: IfNotPresent
 env:
   - name: PORT

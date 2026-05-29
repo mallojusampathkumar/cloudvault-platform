@@ -2,7 +2,7 @@ name: notification-service
 port: 3006
 image:
   repository: 806121398176.dkr.ecr.ap-south-1.amazonaws.com/cloudvault/notification-service
-  tag: "0.1.0"
+  tag: "latest"
   pullPolicy: IfNotPresent
 probes:
   livenessPath: /health
