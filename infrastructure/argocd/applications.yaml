@@ -1,0 +1,151 @@
+# ============================================
+# ArgoCD Applications for CloudVault
+# Each app watches the Helm chart in Git and 
+# auto-syncs to the cluster.
+# ============================================
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: user-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/user-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true       # Delete resources not in Git
+      selfHeal: true    # Revert manual cluster changes
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: product-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/product-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cart-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/cart-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: order-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/order-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payment-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/payment-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notification-service
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallojusampathkumar/cloudvault-platform.git
+    targetRevision: main
+    path: infrastructure/helm-charts/cloudvault-service
+    helm:
+      valueFiles:
+        - ../values/notification-service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudvault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
